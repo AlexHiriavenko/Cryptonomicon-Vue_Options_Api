@@ -22,11 +22,12 @@ https://www.youtube.com/watch?v=4XTy6ucbLNg&list=PLvTBThJr861yMBhpKafII3HZLAYuju
 - Vue - Official;
 - ESLint;
 - Prettier - Code formatter
+- tailwind css Intellisense
 
 ### Notes
 
-For syntax highlighting, use Vue-Official (Vue-Volar), but for code formatting, use Prettier.
-Write next code in settings.json:
+1. For syntax highlighting, use Vue-Official (Vue-Volar), but for code formatting, use Prettier.
+   Write next code in settings.json:
 
 ```
 {
@@ -41,3 +42,6 @@ Write next code in settings.json:
 }
 
 ```
+
+2. you can find cryptocurrencies list here:
+   https://min-api.cryptocompare.com/data/all/coinlist?summary=true
