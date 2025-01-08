@@ -1,5 +1,0 @@
-- реактивность во Vue2
-- реактивность во Vue3
-- :key (для v-for)
-- запросы на api
-- расширение tailwind css Intellisense
