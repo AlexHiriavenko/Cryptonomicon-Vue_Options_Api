@@ -152,7 +152,7 @@
 <script>
 // [x] 6. Наличие в состоянии ЗАВИСИМЫХ ДАННЫХ | Критичность: 5+
 // [ ] 4. Запросы напрямую внутри компонента (???) | Критичность: 5
-// [ ] 2. При удалении остается подписка на загрузку тикера | Критичность: 5
+// [x] 2. При удалении остается подписка на загрузку тикера | Критичность: 5
 // [ ] 5. Обработка ошибок API | Критичность: 5
 // [ ] 3. Количество запросов | Критичность: 4
 // [x] 8. При удалении тикера не изменяется localStorage | Критичность: 4
@@ -164,6 +164,8 @@
 // Параллельно
 // [x] График сломан если везде одинаковые значения
 // [x] При удалении тикера остается выбор
+
+// где [x] - решено; где [ ] - требует доработки
 
 export default {
   name: "App",
@@ -178,7 +180,9 @@ export default {
 
       graph: [],
 
-      page: 1
+      page: 1,
+
+      updateIntervals: {}
     };
   },
 
@@ -203,6 +207,12 @@ export default {
         this.subscribeToUpdates(ticker.name);
       });
     }
+  },
+
+  beforeUnmount() {
+    Object.values(this.updateIntervals).forEach(intervalId => {
+      clearInterval(intervalId);
+    });
   },
 
   computed: {
@@ -249,20 +259,45 @@ export default {
 
   methods: {
     subscribeToUpdates(tickerName) {
-      setInterval(async () => {
+      const intervalId = setInterval(async () => {
         const f = await fetch(
           `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=ce3fd966e7a1d10d65f907b20bf000552158fd3ed1bd614110baa0ac6cb57a7e`
         );
+
+        if (!f.ok) {
+          console.error(`Ошибка запроса: ${f.status} ${f.statusText}`);
+          clearInterval(intervalId);
+          delete this.updateIntervals[tickerName];
+          alert(`Ошибка для coin ${tickerName}: ${data.Message}`);
+          return; // Завершаем выполнение, если ответ не успешен
+        }
+
         const data = await f.json();
 
-        // currentTicker.price =  data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
-        this.tickers.find(t => t.name === tickerName).price =
-          data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
+        if (data.Response === "Error") {
+          console.error(`Ошибка API: ${data.Message}`);
+          clearInterval(intervalId);
+          delete this.updateIntervals[tickerName];
+          alert(`Ошибка для coin ${tickerName}: ${data.Message}`);
+          return;
+        }
 
-        if (this.selectedTicker?.name === tickerName) {
+        console.log(data);
+
+        const currentTicker = this.tickers.find(t => t.name === tickerName);
+
+        if (currentTicker) {
+          currentTicker.price =
+            data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
+        }
+
+        if (currentTicker && this.selectedTicker?.name === tickerName) {
           this.graph.push(data.USD);
         }
       }, 5000);
+
+      // Сохраняем идентификатор интервала
+      this.updateIntervals[tickerName] = intervalId;
       this.ticker = "";
     },
 
@@ -284,7 +319,16 @@ export default {
     },
 
     handleDelete(tickerToRemove) {
+      // Останавливаем интервал
+      const intervalId = this.updateIntervals[tickerToRemove.name];
+      if (intervalId) {
+        clearInterval(intervalId);
+        delete this.updateIntervals[tickerToRemove.name];
+      }
+
+      // Удаляем тикер из списка
       this.tickers = this.tickers.filter(t => t !== tickerToRemove);
+
       if (this.selectedTicker === tickerToRemove) {
         this.selectedTicker = null;
       }
@@ -296,14 +340,27 @@ export default {
       this.graph = [];
     },
 
-    tickers(newValue, oldValue) {
-      // Почему не сработал watch при добавлении?
-      console.log(newValue === oldValue);
+    "tickers.length"(newValue, oldValue) {
+      // watch сработает при добавлении или удалении элементов из tickers
+      console.log(`Длина tickers изменилась с ${oldValue} до ${newValue}`);
       localStorage.setItem("cryptonomicon-list", JSON.stringify(this.tickers));
     },
 
+    // tickers: {
+    //   handler(newValue, oldValue) {
+    //     console.log("Tickers изменены:", newValue, oldValue);
+
+    //     if (oldValue) {
+    //       localStorage.setItem("cryptonomicon-list", JSON.stringify(newValue));
+    //     }
+    //   },
+    //   deep: true, // Отслеживаем глубокие изменения
+    //   immediate: true // Выполняем сразу после инициализации
+    // },
+
     paginatedTickers() {
       if (this.paginatedTickers.length === 0 && this.page > 1) {
+        console.log("вызван");
         this.page -= 1;
       }
     },
