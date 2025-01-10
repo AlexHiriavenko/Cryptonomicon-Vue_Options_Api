@@ -26,7 +26,6 @@
           type="button"
           class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
         >
-          <!-- Heroicon name: solid/mail -->
           <svg
             class="-ml-0.5 mr-2 h-6 w-6"
             xmlns="http://www.w3.org/2000/svg"
@@ -78,7 +77,7 @@
                 {{ t.name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ t.price }}
+                {{ formatPrice(t.price) }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
@@ -151,10 +150,10 @@
 
 <script>
 // [x] 6. Наличие в состоянии ЗАВИСИМЫХ ДАННЫХ | Критичность: 5+
-// [ ] 4. Запросы напрямую внутри компонента (???) | Критичность: 5
+// [x] 4. Запросы напрямую внутри компонента | Критичность: 5
 // [x] 2. При удалении остается подписка на загрузку тикера | Критичность: 5
 // [ ] 5. Обработка ошибок API | Критичность: 5
-// [ ] 3. Количество запросов | Критичность: 4
+// [x] 3. Количество запросов | Критичность: 4
 // [x] 8. При удалении тикера не изменяется localStorage | Критичность: 4
 // [x] 1. Одинаковый код в watch | Критичность: 3
 // [ ] 9. localStorage и анонимные вкладки | Критичность: 3
@@ -165,7 +164,7 @@
 // [x] График сломан если везде одинаковые значения
 // [x] При удалении тикера остается выбор
 
-// где [x] - решено; где [ ] - требует доработки
+import { subscribeToTicker, unsubscribeFromTicker } from "./api";
 
 export default {
   name: "App",
@@ -180,9 +179,7 @@ export default {
 
       graph: [],
 
-      page: 1,
-
-      updateIntervals: {}
+      page: 1
     };
   },
 
@@ -204,15 +201,13 @@ export default {
     if (tickersData) {
       this.tickers = JSON.parse(tickersData);
       this.tickers.forEach(ticker => {
-        this.subscribeToUpdates(ticker.name);
+        subscribeToTicker(ticker.name, newPrice =>
+          this.updateTicker(ticker.name, newPrice)
+        );
       });
     }
-  },
 
-  beforeUnmount() {
-    Object.values(this.updateIntervals).forEach(intervalId => {
-      clearInterval(intervalId);
-    });
+    setInterval(this.updateTickers, 5000);
   },
 
   computed: {
@@ -258,47 +253,22 @@ export default {
   },
 
   methods: {
-    subscribeToUpdates(tickerName) {
-      const intervalId = setInterval(async () => {
-        const f = await fetch(
-          `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=ce3fd966e7a1d10d65f907b20bf000552158fd3ed1bd614110baa0ac6cb57a7e`
-        );
+    updateTicker(tickerName, price) {
+      this.tickers
+        .filter(t => t.name === tickerName)
+        .forEach(t => {
+          if (t === this.selectedTicker) {
+            this.graph.push(price);
+          }
+          t.price = price;
+        });
+    },
 
-        if (!f.ok) {
-          console.error(`Ошибка запроса: ${f.status} ${f.statusText}`);
-          clearInterval(intervalId);
-          delete this.updateIntervals[tickerName];
-          alert(`Ошибка для coin ${tickerName}: ${data.Message}`);
-          return; // Завершаем выполнение, если ответ не успешен
-        }
-
-        const data = await f.json();
-
-        if (data.Response === "Error") {
-          console.error(`Ошибка API: ${data.Message}`);
-          clearInterval(intervalId);
-          delete this.updateIntervals[tickerName];
-          alert(`Ошибка для coin ${tickerName}: ${data.Message}`);
-          return;
-        }
-
-        console.log(data);
-
-        const currentTicker = this.tickers.find(t => t.name === tickerName);
-
-        if (currentTicker) {
-          currentTicker.price =
-            data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
-        }
-
-        if (currentTicker && this.selectedTicker?.name === tickerName) {
-          this.graph.push(data.USD);
-        }
-      }, 5000);
-
-      // Сохраняем идентификатор интервала
-      this.updateIntervals[tickerName] = intervalId;
-      this.ticker = "";
+    formatPrice(price) {
+      if (price === "-") {
+        return price;
+      }
+      return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
 
     add() {
@@ -308,9 +278,11 @@ export default {
       };
 
       this.tickers = [...this.tickers, currentTicker];
+      this.ticker = "";
       this.filter = "";
-
-      this.subscribeToUpdates(currentTicker.name);
+      subscribeToTicker(currentTicker.name, newPrice =>
+        this.updateTicker(currentTicker.name, newPrice)
+      );
     },
 
     select(ticker) {
@@ -319,19 +291,11 @@ export default {
     },
 
     handleDelete(tickerToRemove) {
-      // Останавливаем интервал
-      const intervalId = this.updateIntervals[tickerToRemove.name];
-      if (intervalId) {
-        clearInterval(intervalId);
-        delete this.updateIntervals[tickerToRemove.name];
-      }
-
-      // Удаляем тикер из списка
       this.tickers = this.tickers.filter(t => t !== tickerToRemove);
-
       if (this.selectedTicker === tickerToRemove) {
         this.selectedTicker = null;
       }
+      unsubscribeFromTicker(tickerToRemove.name);
     }
   },
 
@@ -340,27 +304,12 @@ export default {
       this.graph = [];
     },
 
-    "tickers.length"(newValue, oldValue) {
-      // watch сработает при добавлении или удалении элементов из tickers
-      console.log(`Длина tickers изменилась с ${oldValue} до ${newValue}`);
+    tickers() {
       localStorage.setItem("cryptonomicon-list", JSON.stringify(this.tickers));
     },
 
-    // tickers: {
-    //   handler(newValue, oldValue) {
-    //     console.log("Tickers изменены:", newValue, oldValue);
-
-    //     if (oldValue) {
-    //       localStorage.setItem("cryptonomicon-list", JSON.stringify(newValue));
-    //     }
-    //   },
-    //   deep: true, // Отслеживаем глубокие изменения
-    //   immediate: true // Выполняем сразу после инициализации
-    // },
-
     paginatedTickers() {
       if (this.paginatedTickers.length === 0 && this.page > 1) {
-        console.log("вызван");
         this.page -= 1;
       }
     },
