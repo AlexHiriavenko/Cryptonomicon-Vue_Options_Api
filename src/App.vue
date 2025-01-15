@@ -2,7 +2,7 @@
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
     <div class="container">
       <div class="w-full my-4"></div>
-      <add-ticker @add-ticker="add" :disabled="tooManyTickersAdded" />
+      <add-ticker @addTicker="add" :disabled="tooManyTickersAdded" />
       <template v-if="tickers.length">
         <hr class="w-full border-t border-gray-600 my-4" />
         <div>
@@ -29,7 +29,7 @@
             :key="t.name"
             @click="select(t)"
             :class="{
-              'border-4': selectedTicker === t
+              'border-4': selectedTicker === t,
             }"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
@@ -95,7 +95,7 @@
             x="0"
             y="0"
             viewBox="0 0 511.76 511.76"
-            style="enable-background:new 0 0 512 512"
+            style="enable-background: new 0 0 512 512"
             xml:space="preserve"
           >
             <g>
@@ -130,19 +130,19 @@
 // [x] График сломан если везде одинаковые значения
 // [x] При удалении тикера остается выбор
 
-import { subscribeToTicker, unsubscribeFromTicker } from "./api";
-import AddTicker from "./components/AddTicker.vue";
+import { subscribeToTicker, unsubscribeFromTicker } from './api';
+import AddTicker from './components/AddTicker.vue';
 
 export default {
-  name: "App",
+  name: 'App',
 
   components: {
-    AddTicker
+    AddTicker,
   },
 
   data() {
     return {
-      filter: "",
+      filter: '',
 
       tickers: [],
       selectedTicker: null,
@@ -150,7 +150,7 @@ export default {
       graph: [],
       maxGraphElements: 1,
 
-      page: 1
+      page: 1,
     };
   },
 
@@ -159,9 +159,9 @@ export default {
       new URL(window.location).searchParams.entries()
     );
 
-    const VALID_KEYS = ["filter", "page"];
+    const VALID_KEYS = ['filter', 'page'];
 
-    VALID_KEYS.forEach(key => {
+    VALID_KEYS.forEach((key) => {
       if (windowData[key]) {
         this[key] = windowData[key];
       }
@@ -175,12 +175,12 @@ export default {
     //   this.page = windowData.page;
     // }
 
-    const tickersData = localStorage.getItem("cryptonomicon-list");
+    const tickersData = localStorage.getItem('cryptonomicon-list');
 
     if (tickersData) {
       this.tickers = JSON.parse(tickersData);
-      this.tickers.forEach(ticker => {
-        subscribeToTicker(ticker.name, newPrice =>
+      this.tickers.forEach((ticker) => {
+        subscribeToTicker(ticker.name, (newPrice) =>
           this.updateTicker(ticker.name, newPrice)
         );
       });
@@ -190,11 +190,11 @@ export default {
   },
 
   mounted() {
-    window.addEventListener("resize", this.calculateMaxGraphElements);
+    window.addEventListener('resize', this.calculateMaxGraphElements);
   },
 
   beforeUnmount() {
-    window.removeEventListener("resize", this.calculateMaxGraphElements);
+    window.removeEventListener('resize', this.calculateMaxGraphElements);
   },
 
   computed: {
@@ -211,7 +211,7 @@ export default {
     },
 
     filteredTickers() {
-      return this.tickers.filter(ticker => ticker.name.includes(this.filter));
+      return this.tickers.filter((ticker) => ticker.name.includes(this.filter));
     },
 
     paginatedTickers() {
@@ -231,16 +231,16 @@ export default {
       }
 
       return this.graph.map(
-        price => 5 + ((price - minValue) * 95) / (maxValue - minValue)
+        (price) => 5 + ((price - minValue) * 95) / (maxValue - minValue)
       );
     },
 
     pageStateOptions() {
       return {
         filter: this.filter,
-        page: this.page
+        page: this.page,
       };
-    }
+    },
   },
 
   methods: {
@@ -254,8 +254,8 @@ export default {
 
     updateTicker(tickerName, price) {
       this.tickers
-        .filter(t => t.name === tickerName)
-        .forEach(t => {
+        .filter((t) => t.name === tickerName)
+        .forEach((t) => {
           if (t === this.selectedTicker) {
             this.graph.push(price);
             while (this.graph.length > this.maxGraphElements) {
@@ -267,7 +267,7 @@ export default {
     },
 
     formatPrice(price) {
-      if (price === "-") {
+      if (price === '-') {
         return price;
       }
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
@@ -276,12 +276,12 @@ export default {
     add(ticker) {
       const currentTicker = {
         name: ticker,
-        price: "-"
+        price: '-',
       };
 
       this.tickers = [...this.tickers, currentTicker];
-      this.filter = "";
-      subscribeToTicker(currentTicker.name, newPrice =>
+      this.filter = '';
+      subscribeToTicker(currentTicker.name, (newPrice) =>
         this.updateTicker(currentTicker.name, newPrice)
       );
     },
@@ -291,12 +291,12 @@ export default {
     },
 
     handleDelete(tickerToRemove) {
-      this.tickers = this.tickers.filter(t => t !== tickerToRemove);
+      this.tickers = this.tickers.filter((t) => t !== tickerToRemove);
       if (this.selectedTicker === tickerToRemove) {
         this.selectedTicker = null;
       }
       unsubscribeFromTicker(tickerToRemove.name);
-    }
+    },
   },
 
   watch: {
@@ -309,7 +309,7 @@ export default {
     tickers(newValue, oldValue) {
       // Почему не сработал watch при добавлении?
       console.log(newValue === oldValue);
-      localStorage.setItem("cryptonomicon-list", JSON.stringify(this.tickers));
+      localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers));
     },
 
     paginatedTickers() {
@@ -328,7 +328,7 @@ export default {
         document.title,
         `${window.location.pathname}?filter=${value.filter}&page=${value.page}`
       );
-    }
-  }
+    },
+  },
 };
 </script>

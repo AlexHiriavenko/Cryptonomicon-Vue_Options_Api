@@ -1,4 +1,4 @@
-const APK = "260247a5c09824d11eacc4f26c9f6b8f1d20c900f0b366e746a65609f5dc05b5";
+const APK = '260247a5c09824d11eacc4f26c9f6b8f1d20c900f0b366e746a65609f5dc05b5';
 
 const tickersHandlers = new Map(); // {}
 const socket = new WebSocket(
@@ -7,18 +7,20 @@ const socket = new WebSocket(
 
 console.log(socket.readyState);
 
-const AGGREGATE_INDEX = "5";
+const AGGREGATE_INDEX = '5';
 
-socket.addEventListener("message", e => {
-  const { TYPE: type, FROMSYMBOL: currency, PRICE: newPrice } = JSON.parse(
-    e.data
-  );
+socket.addEventListener('message', (e) => {
+  const {
+    TYPE: type,
+    FROMSYMBOL: currency,
+    PRICE: newPrice,
+  } = JSON.parse(e.data);
   if (type !== AGGREGATE_INDEX || newPrice === undefined) {
     return;
   }
 
   const handlers = tickersHandlers.get(currency) ?? [];
-  handlers.forEach(fn => fn(newPrice));
+  handlers.forEach((fn) => fn(newPrice));
 });
 
 function sendToWebSocket(message) {
@@ -30,7 +32,7 @@ function sendToWebSocket(message) {
   }
 
   socket.addEventListener(
-    "open",
+    'open',
     () => {
       socket.send(stringifiedMessage);
     },
@@ -40,15 +42,15 @@ function sendToWebSocket(message) {
 
 function subscribeToTickerOnWs(ticker) {
   sendToWebSocket({
-    action: "SubAdd",
-    subs: [`5~CCCAGG~${ticker}~USD`]
+    action: 'SubAdd',
+    subs: [`5~CCCAGG~${ticker}~USD`],
   });
 }
 
 function unsubscribeFromTickerOnWs(ticker) {
   sendToWebSocket({
-    action: "SubRemove",
-    subs: [`5~CCCAGG~${ticker}~USD`]
+    action: 'SubRemove',
+    subs: [`5~CCCAGG~${ticker}~USD`],
   });
 }
 
@@ -58,7 +60,7 @@ export const subscribeToTicker = (ticker, cb) => {
   subscribeToTickerOnWs(ticker);
 };
 
-export const unsubscribeFromTicker = ticker => {
+export const unsubscribeFromTicker = (ticker) => {
   tickersHandlers.delete(ticker);
   unsubscribeFromTickerOnWs(ticker);
 };

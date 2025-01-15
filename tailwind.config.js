@@ -1,11 +1,8 @@
-module.exports = {
-  purge: { content: ["./public/**/*.html", "./src/**/*.vue"] },
-  darkMode: false, // or 'media' or 'class'
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./public/**/*.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
-    extend: {}
+    extend: {},
   },
-  variants: {
-    extend: {}
-  },
-  plugins: [require("@tailwindcss/forms")]
+  plugins: [require('@tailwindcss/forms')],
 };

@@ -22,27 +22,27 @@
   </section>
 </template>
 <script>
-import AddButton from "./AddButton.vue";
+import AddButton from './AddButton.vue';
 
 export default {
   components: {
-    AddButton
+    AddButton,
   },
 
   props: {
     disabled: {
       type: Boolean,
       required: false,
-      default: false
-    }
+      default: false,
+    },
   },
 
   emits: {
-    "add-ticker": value => typeof value === "string" && value.length > 0
+    addTicker: (value) => typeof value === 'string' && value.length > 0,
   },
 
   data() {
-    return { ticker: "" };
+    return { ticker: '' };
   },
 
   methods: {
@@ -50,9 +50,9 @@ export default {
       if (this.ticker.length === 0) {
         return;
       }
-      this.$emit("add-ticker", this.ticker);
-      this.ticker = "";
-    }
-  }
+      this.$emit('addTicker', this.ticker);
+      this.ticker = '';
+    },
+  },
 };
 </script>
