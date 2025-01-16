@@ -7,18 +7,18 @@
         >
         <div class="mt-1 relative rounded-md shadow-md">
           <input
+            id="wallet"
             v-model="ticker"
-            @keydown.enter="add"
             type="text"
             name="wallet"
-            id="wallet"
             class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
             placeholder="Например DOGE"
+            @keydown.enter="add"
           />
         </div>
       </div>
     </div>
-    <add-button @click="add" type="button" :disabled="disabled" class="my-4" />
+    <add-button type="button" :disabled="disabled" class="my-4" @click="add" />
   </section>
 </template>
 <script>

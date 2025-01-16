@@ -21,9 +21,10 @@ https://www.youtube.com/watch?v=4XTy6ucbLNg&list=PLvTBThJr861yMBhpKafII3HZLAYuju
 
 - manually delete "node_modules" directory
 - npm install
+- restart your IDE
+- npm run lint
 - npm run dev
 - npm run build
-- npm run lint
 - npm run deploy
 
 ### [Configuration Reference](https://cli.vuejs.org/config/)
@@ -44,6 +45,8 @@ https://www.youtube.com/watch?v=4XTy6ucbLNg&list=PLvTBThJr861yMBhpKafII3HZLAYuju
 - финальная версия (ветки after_course и main) уже собрана на сборщике vite и имеет последние актуальные версии зависимостей на 2025г.
 - чтобы избежать конфликтов при настройке и сборке проекта при переходе к веткам after_course или main: <br>
   !!! обязательно удалите папку node_modules и заново выполните npm i !!!
+- перезапустите ваш IDE.
+- В качестве end of line лучше использовать LF вместо CRLF . В случае ошибок выполните npm run lint. Или внесите изменения eslint.config.js чтобы игнорировать эти правила
 
 ### Notes
 

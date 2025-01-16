@@ -45,6 +45,25 @@ export default [
           order: ['template', 'script', 'style'],
         },
       ],
+      // Указывает порядок атрибутов в компонентах Vue
+      'vue/attributes-order': [
+        'error',
+        {
+          order: [
+            'DEFINITION', // is, v-is
+            'LIST_RENDERING', // v-for
+            'CONDITIONALS', // v-if, v-else-if, v-else, v-show, v-cloak
+            'RENDER_MODIFIERS', // v-once, v-pre
+            'GLOBAL', // id
+            'UNIQUE', // ref, key, slot
+            'TWO_WAY_BINDING', // v-model
+            'OTHER_DIRECTIVES', // v-custom-directive
+            'OTHER_ATTR', // Все остальные атрибуты
+            'EVENTS', // @click, @input
+            'CONTENT', // class, style
+          ],
+        },
+      ],
     },
   },
 
@@ -66,8 +85,17 @@ export default [
   {
     files: ['**/*.{js,vue}'],
     rules: {
-      semi: 'off', // Не дублируйте правило, Prettier уже обрабатывает точки с запятой
+      // Не дублируем правило, Prettier уже обрабатывает точки с запятой
+      semi: 'off',
+      // Запрещает объявление переменных с одинаковыми именами в одном скоупе
+      'no-redeclare': 'error',
     },
     ...prettier,
+  },
+  {
+    files: ['**/*.{js,vue,ts,jsx,tsx}'], // Применяем правило ко всем поддерживаемым файлам
+    rules: {
+      'linebreak-style': ['error', 'unix'], // Заставляет использовать LF (unix-style)
+    },
   },
 ];

@@ -5,7 +5,7 @@ const socket = new WebSocket(
   `wss://streamer.cryptocompare.com/v2?api_key=${APK}`
 );
 
-console.log(socket.readyState);
+// console.log(socket.readyState);
 
 const AGGREGATE_INDEX = '5';
 

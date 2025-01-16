@@ -2,21 +2,21 @@
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
     <div class="container">
       <div class="w-full my-4"></div>
-      <add-ticker @addTicker="add" :disabled="tooManyTickersAdded" />
+      <add-ticker :disabled="tooManyTickersAdded" @addTicker="add" />
       <template v-if="tickers.length">
         <hr class="w-full border-t border-gray-600 my-4" />
         <div>
           <button
-            class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             v-if="page > 1"
+            class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             @click="page = page - 1"
           >
             Назад
           </button>
           <button
+            v-if="hasNextPage"
             class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             @click="page = page + 1"
-            v-if="hasNextPage"
           >
             Вперед
           </button>
@@ -27,11 +27,11 @@
           <div
             v-for="t in paginatedTickers"
             :key="t.name"
-            @click="select(t)"
             :class="{
               'border-4': selectedTicker === t,
             }"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
+            @click="select(t)"
           >
             <div class="px-4 py-5 sm:p-6 text-center">
               <dt class="text-sm font-medium text-gray-500 truncate">
@@ -43,8 +43,8 @@
             </div>
             <div class="w-full border-t border-gray-200"></div>
             <button
-              @click.stop="handleDelete(t)"
               class="flex items-center justify-center font-medium w-full bg-gray-100 px-4 py-4 sm:px-6 text-md text-gray-500 hover:text-gray-600 hover:bg-gray-200 hover:opacity-20 transition-all focus:outline-none"
+              @click.stop="handleDelete(t)"
             >
               <svg
                 class="h-5 w-5"
@@ -70,8 +70,8 @@
           {{ selectedTicker.name }} - USD
         </h3>
         <div
-          class="flex items-end border-gray-600 border-b border-l h-64"
           ref="graph"
+          class="flex items-end border-gray-600 border-b border-l h-64"
         >
           <div
             v-for="(bar, idx) in normalizedGraph"
@@ -81,9 +81,9 @@
           ></div>
         </div>
         <button
-          @click="selectedTicker = null"
           type="button"
           class="absolute top-0 right-0"
+          @click="selectedTicker = null"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -113,23 +113,6 @@
 </template>
 
 <script>
-// H - homework - домашнее задание
-
-// [x] 6. Наличие в состоянии ЗАВИСИМЫХ ДАННЫХ | Критичность: 5+
-// [x] 4. Запросы напрямую внутри компонента (???) | Критичность: 5
-// [x] 2. При удалении остается подписка на загрузку тикера | Критичность: 5
-// [H] 5. Обработка ошибок API | Критичность: 5
-// [х] 3. Количество запросов | Критичность: 4
-// [x] 8. При удалении тикера не изменяется localStorage | Критичность: 4
-// [x] 1. Одинаковый код в watch | Критичность: 3
-// [ ] 9. localStorage и анонимные вкладки | Критичность: 3
-// [x] 7. График ужасно выглядит если будет много цен | Критичность: 2
-// [ ] 10. Магические строки и числа (URL, 5000 миллисекунд задержки, ключ локал стораджа, количество на странице) |  Критичность: 1
-
-// Параллельно
-// [x] График сломан если везде одинаковые значения
-// [x] При удалении тикера остается выбор
-
 import { subscribeToTicker, unsubscribeFromTicker } from './api';
 import AddTicker from './components/AddTicker.vue';
 
@@ -166,14 +149,6 @@ export default {
         this[key] = windowData[key];
       }
     });
-
-    // if (windowData.filter) {
-    //   this.filter = windowData.filter;
-    // }
-
-    // if (windowData.page) {
-    //   this.page = windowData.page;
-    // }
 
     const tickersData = localStorage.getItem('cryptonomicon-list');
 
@@ -306,9 +281,7 @@ export default {
       this.$nextTick().then(this.calculateMaxGraphElements);
     },
 
-    tickers(newValue, oldValue) {
-      // Почему не сработал watch при добавлении?
-      console.log(newValue === oldValue);
+    tickers() {
       localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers));
     },
 
