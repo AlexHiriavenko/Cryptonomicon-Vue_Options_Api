@@ -38,7 +38,8 @@ socket.addEventListener('message', (e) => {
     ratioBTC = priceBTC;
   }
   if (type === messageType.INVALID_SUB && parameter) {
-    createMediationSubscription(parameter);
+    console.log('test');
+    // createMediationSubscription(parameter);
     return;
   }
   const handlers = tickerHandlers.get(fromCurrency) ?? [];
@@ -86,15 +87,15 @@ const unsubscribeFromTickerOnWS = (ticker, convertCurrency) => {
   sendToWS(message);
 };
 
+export const unsubscribeFromTicker = (ticker) => {
+  tickerHandlers.delete(ticker);
+  unsubscribeFromTickerOnWS(ticker, 'USD');
+};
+
 export const subscribeToTicker = (ticker, cb) => {
   const subscribers = tickerHandlers.get(ticker) || [];
   tickerHandlers.set(ticker, [...subscribers, cb]);
   subscribeToTickerOnWS(ticker, 'USD');
-};
-
-export const unsubscribeFromTicker = (ticker) => {
-  tickerHandlers.delete(ticker);
-  unsubscribeFromTickerOnWS(ticker, 'USD');
 };
 
 export const getTickerList = async () => {

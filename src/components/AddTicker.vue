@@ -77,6 +77,10 @@ export default {
     };
   },
 
+  created() {
+    console.log(this.tickers);
+  },
+
   computed: {
     autocompleteTicker() {
       return this.oftenTickers
@@ -114,20 +118,16 @@ export default {
         return;
       }
 
-      if (!this.isExistCoin) {
-        alert('в Cryptonomicon такая криптовалюта отсуствует');
-        return;
-      }
+      // if (!this.isExistCoin) {
+      //   alert('в Cryptonomicon такая криптовалюта отсуствует');
+      //   return;
+      // }
 
       const uppercaseTicker = this.ticker.toUpperCase();
-      const bgColor = this.oftenTickers.includes(uppercaseTicker)
-        ? 'bg-white'
-        : 'bg-red-100';
       const ticker = {
         name: uppercaseTicker,
         price: '-',
         intervalId: null,
-        bgColor,
       };
       this.$emit('addTicker', ticker);
       this.ticker = '';

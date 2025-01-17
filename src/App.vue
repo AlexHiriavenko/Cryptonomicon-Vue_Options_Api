@@ -36,23 +36,22 @@
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
-            v-for="t of paginatedTickers"
-            :key="t"
+            v-for="ticker of paginatedTickers"
+            :key="ticker"
             :class="[
-              t.bgColor,
-              {
-                'border-4': selectedTicker === t,
-              },
+              // ticker.bgColor,
+              selectedTicker === ticker ? 'border-4' : '',
+              !isNaN(ticker.price) ? 'bg-white' : 'bg-red-100',
             ]"
             class="overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
-            @click="select(t)"
+            @click="select(ticker)"
           >
             <div class="px-4 py-5 sm:p-6 text-center">
               <dt class="text-sm font-medium text-gray-500 truncate">
-                {{ t.name }} - USD
+                {{ ticker.name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ formatPrice(t.price) }}
+                {{ formatPrice(ticker.price) }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
@@ -211,7 +210,7 @@ export default {
 
     formatPrice(price) {
       if (price === '-') {
-        return price;
+        return 'нет курса к USD';
       }
       return price > 1 ? price?.toFixed(2) : price?.toPrecision(3);
     },
