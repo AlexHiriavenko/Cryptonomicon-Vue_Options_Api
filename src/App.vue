@@ -1,29 +1,19 @@
 <template>
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
     <div class="container">
-      <add-ticker
+      <AddTicker
         :often-tickers="oftenTickers"
         :tickers="tickers"
         @add-ticker="add"
       />
       <template v-if="tickers.length">
         <div>
-          <button
-            :disabled="!(page > 1)"
-            class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            :class="{ 'disabled:opacity-50': !(page > 1) }"
-            @click="if (page > 1) page--;"
-          >
-            back
-          </button>
-          <button
-            :disabled="!hasNextPage"
-            class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            :class="{ 'disabled:opacity-50': !hasNextPage }"
-            @click="if (hasNextPage) page++;"
-          >
-            next
-          </button>
+          <PaginationControls
+            :has-prev-page="hasPrevPage"
+            :has-next-page="hasNextPage"
+            @prev-page="hasPrevPage && page--"
+            @next-page="hasNextPage && page++"
+          />
           <label for="filter" class="block text-sm font-medium text-gray-700"
             >Фильтр</label
           >
@@ -41,7 +31,6 @@
             v-for="ticker of paginatedTickers"
             :key="ticker"
             :class="[
-              // ticker.bgColor,
               selectedTicker === ticker ? 'border-4' : '',
               ticker.price !== null ? 'bg-white' : 'bg-red-100',
             ]"
@@ -85,6 +74,7 @@
 <script>
 import { getTickerList, subscribeToTicker, unsubscribeFromTicker } from './api';
 import AddTicker from './components/AddTicker.vue';
+import PaginationControls from './components/PaginationControls.vue';
 import TheGraph from './components/TheGraph.vue';
 import RemoveIcon from '@/components/SVG/RemoveIcon.vue';
 
@@ -93,6 +83,7 @@ export default {
     AddTicker,
     TheGraph,
     RemoveIcon,
+    PaginationControls,
   },
 
   data() {
@@ -125,6 +116,10 @@ export default {
 
     hasNextPage() {
       return this.filteredTickers?.length > this.endIndex;
+    },
+
+    hasPrevPage() {
+      return this.page > 1;
     },
 
     filteredTickers() {

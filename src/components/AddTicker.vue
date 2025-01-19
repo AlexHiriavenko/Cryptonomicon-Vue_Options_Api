@@ -114,10 +114,10 @@ export default {
         return;
       }
 
-      if (!this.isExistCoin) {
-        alert('в Cryptonomicon такая криптовалюта отсуствует');
-        return;
-      }
+      // if (!this.isExistCoin) {
+      //   alert('в Cryptonomicon такая криптовалюта отсуствует');
+      //   return;
+      // }
 
       const uppercaseTicker = this.ticker.toUpperCase();
       const ticker = {
