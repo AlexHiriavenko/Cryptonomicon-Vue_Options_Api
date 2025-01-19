@@ -25,37 +25,30 @@ socket.addEventListener('message', (e) => {
     PRICE: newPrice,
     PARAMETER: parameter,
   } = JSON.parse(e.data);
-  if (
-    type !== messageType.INVALID_SUB &&
-    (type !== messageType.AGGREGATE_INDEX || newPrice === undefined)
-  ) {
+
+  if (type === messageType.INVALID_SUB && type === '500') {
+    // Извлекаем тикер из параметра подписки через регулярное выражение (строка1, X, строка2)
+    const tickerMatch = parameter.match(/5~CCCAGG~(.*?)~/);
+
+    if (Array.isArray(tickerMatch) && tickerMatch.length > 1) {
+      const tickerName = tickerMatch[1];
+      // Получаем обработчики для данного тикера
+      const tickerHandlersList = tickerHandlers.get(tickerName) ?? [];
+      tickerHandlersList.forEach((updateHandler) => updateHandler(null));
+    }
     return;
   }
+
   let ratioBTC = 1;
   if (fromCurrency === 'BTC') {
     priceBTC = newPrice;
   } else if (toCurrency === 'BTC') {
     ratioBTC = priceBTC;
   }
-  if (type === messageType.INVALID_SUB && parameter) {
-    console.log('test');
-    // createMediationSubscription(parameter);
-    return;
-  }
+
   const handlers = tickerHandlers.get(fromCurrency) ?? [];
   handlers?.forEach((fn) => fn(newPrice * ratioBTC));
 });
-
-const createMediationSubscription = (parameter) => {
-  const [toCurrency, fromCurrency] = parameter.split('~').reverse();
-  const isValidTicker = tickerList?.includes(fromCurrency);
-  if (!isValidTicker || fromCurrency === 'BTC' || toCurrency === 'BTC') {
-    console.log('не валидная валюта');
-    return;
-  }
-  subscribeToTickerOnWS('BTC', 'USD');
-  subscribeToTickerOnWS(fromCurrency, 'BTC');
-};
 
 const sendToWS = (message) => {
   const stringifiedMessage = JSON.stringify(message);
@@ -105,4 +98,13 @@ export const getTickerList = async () => {
   const data = await response.json();
   tickerList = Object.values(data.Data)?.map((ticker) => ticker.Symbol);
   return tickerList;
+};
+
+export const getCoinTopList = async (limit = 10) => {
+  const response = await fetch(
+    `https://min-api.cryptocompare.com/data/top/mktcapfull?limit=${limit}&tsym=USD`
+  );
+
+  const data = await response.json();
+  console.log(data);
 };

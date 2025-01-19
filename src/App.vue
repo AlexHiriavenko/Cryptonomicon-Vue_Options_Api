@@ -9,16 +9,18 @@
       <template v-if="tickers.length">
         <div>
           <button
-            v-if="page > 1"
+            :disabled="!(page > 1)"
             class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            @click="page--"
+            :class="{ 'disabled:opacity-50': !(page > 1) }"
+            @click="if (page > 1) page--;"
           >
             back
           </button>
           <button
-            v-if="hasNextPage"
-            class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            @click="page++"
+            :disabled="!hasNextPage"
+            class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            :class="{ 'disabled:opacity-50': !hasNextPage }"
+            @click="if (hasNextPage) page++;"
           >
             next
           </button>
@@ -41,7 +43,7 @@
             :class="[
               // ticker.bgColor,
               selectedTicker === ticker ? 'border-4' : '',
-              !isNaN(ticker.price) ? 'bg-white' : 'bg-red-100',
+              ticker.price !== null ? 'bg-white' : 'bg-red-100',
             ]"
             class="overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
             @click="select(ticker)"
@@ -51,27 +53,19 @@
                 {{ ticker.name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ formatPrice(ticker.price) }}
+                {{
+                  ticker.price === null
+                    ? 'нет курса к USD'
+                    : formatPrice(ticker.price)
+                }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
             <button
               class="flex items-center justify-center font-medium w-full bg-gray-100 px-4 py-4 sm:px-6 text-md text-gray-500 hover:text-gray-600 hover:bg-gray-200 hover:opacity-20 transition-all focus:outline-none"
-              @click.stop="remove(t)"
+              @click.stop="remove(ticker)"
             >
-              <svg
-                class="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="#718096"
-                aria-hidden="true"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
+              <RemoveIcon />
               Удалить
             </button>
           </div>
@@ -92,11 +86,13 @@
 import { getTickerList, subscribeToTicker, unsubscribeFromTicker } from './api';
 import AddTicker from './components/AddTicker.vue';
 import TheGraph from './components/TheGraph.vue';
+import RemoveIcon from '@/components/SVG/RemoveIcon.vue';
 
 export default {
   components: {
     AddTicker,
     TheGraph,
+    RemoveIcon,
   },
 
   data() {
@@ -173,7 +169,6 @@ export default {
 
   async created() {
     this.oftenTickers = [...(await getTickerList())];
-    console.log(this.oftenTickers);
 
     const params = Object.fromEntries(
       new URL(window.location).searchParams.entries()
@@ -203,6 +198,7 @@ export default {
       }
       this.tickers = [...this.tickers, ticker];
       subscribeToTicker(ticker.name, (price) => {
+        console.log('update ticker');
         this.updateTicker(ticker.name, price);
       });
       this.ticker = '';
@@ -210,8 +206,9 @@ export default {
 
     formatPrice(price) {
       if (price === '-') {
-        return 'нет курса к USD';
+        return price;
       }
+      console.log(price);
       return price > 1 ? price?.toFixed(2) : price?.toPrecision(3);
     },
 
@@ -237,18 +234,18 @@ export default {
       }
     },
 
-    remove(t) {
+    remove(tickerToRemove) {
       this.tickers = this.tickers.filter((ticker) => {
-        if (ticker === t) {
+        if (ticker === tickerToRemove) {
           clearInterval(ticker.intervalId);
           ticker.intervalId = null;
         }
-        return ticker !== t;
+        return ticker !== tickerToRemove;
       });
-      if (t === this.selectedTicker) {
+      if (tickerToRemove === this.selectedTicker) {
         this.selectedTicker = null;
       }
-      unsubscribeFromTicker(t.name);
+      unsubscribeFromTicker(tickerToRemove.name);
     },
 
     select(ticker) {
