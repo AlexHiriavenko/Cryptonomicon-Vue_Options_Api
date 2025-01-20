@@ -64,7 +64,6 @@
           :graph="graph"
           :selected-ticker="selectedTicker"
           @remove-graph="selectedTicker = null"
-          @update-max-elements="updateMaxElements"
         />
       </template>
     </div>
@@ -205,20 +204,6 @@ export default {
       }
       console.log(price);
       return price > 1 ? price?.toFixed(2) : price?.toPrecision(3);
-    },
-
-    resizeGraph() {
-      if (this.graph.length > this.maxGraphElements) {
-        this.graph = this.graph.slice(
-          this.graph.length - this.maxGraphElements,
-          this.graph.length
-        );
-      }
-    },
-
-    updateMaxElements(maxElements) {
-      this.maxGraphElements = maxElements;
-      this.resizeGraph();
     },
 
     updateTicker(tickerName, price) {

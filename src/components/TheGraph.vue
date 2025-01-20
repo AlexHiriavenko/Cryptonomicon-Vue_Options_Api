@@ -43,65 +43,61 @@
 <script>
 export default {
   name: 'TheGraph',
-
   props: {
     selectedTicker: Object,
     graph: Array,
   },
-
-  emits: {
-    click: null,
-    removeGraph: null,
-    updateMaxElements: null,
-  },
-
+  emits: ['removeGraph'],
   data() {
     return {
       maxGraphElements: 1,
       graphWidth: 0,
+      localGraph: [],
     };
   },
-
   computed: {
     normalizedGraph() {
-      const maxVal = Math.max(...this.graph);
-      let minVal = Math.min(...this.graph);
+      const maxVal = Math.max(...this.localGraph);
+      let minVal = Math.min(...this.localGraph);
       if (maxVal === minVal) {
         minVal = 0;
       }
-      return this.graph.map((g) => 5 + ((g - minVal) * 95) / (maxVal - minVal));
+      return this.localGraph.map(
+        (g) => 5 + ((g - minVal) * 95) / (maxVal - minVal)
+      );
     },
   },
-
   watch: {
-    maxGraphElements() {
-      this.$emit('updateMaxElements', this.maxGraphElements);
+    graph: {
+      immediate: true,
+      handler(newGraph) {
+        this.localGraph = this.resizeGraph(newGraph);
+      },
     },
-
-    graph() {
-      this.calculateMaxGraphElements();
-    },
-
     graphWidth() {
       this.calculateMaxGraphElements();
     },
   },
-
   mounted() {
     window.addEventListener('resize', this.calculateMaxGraphElements);
+    this.calculateMaxGraphElements();
   },
-
   beforeUnmount() {
     window.removeEventListener('resize', this.calculateMaxGraphElements);
   },
-
   methods: {
     calculateMaxGraphElements() {
       if (!this.$refs.graph) {
         return;
       }
       this.graphWidth = this.$refs.graph.clientWidth;
-      this.maxGraphElements = parseFloat((this.graphWidth / 38).toFixed());
+      this.maxGraphElements = Math.floor(this.graphWidth / 38);
+    },
+    resizeGraph(graph) {
+      if (graph.length > this.maxGraphElements) {
+        return graph.slice(graph.length - this.maxGraphElements);
+      }
+      return graph;
     },
   },
 };
