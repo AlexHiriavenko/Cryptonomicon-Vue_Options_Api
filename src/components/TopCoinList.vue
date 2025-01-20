@@ -4,7 +4,7 @@
     <li
       v-for="{ CoinInfo } in topCoinList"
       :key="CoinInfo.Name"
-      class="bg-black p-2 text-green-400"
+      class="bg-black p-2 text-green-400 cursor-default"
     >
       {{ CoinInfo.Name }} : {{ CoinInfo.FullName }}
     </li>
