@@ -1,4 +1,5 @@
 <template>
+  <TopCoinList />
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
     <div class="container">
       <AddTicker
@@ -36,6 +37,7 @@
           :graph="graph"
           :selected-ticker="selectedTicker"
           @remove-graph="selectedTicker = null"
+          @update-max-elements="updateMaxElements"
         />
       </template>
     </div>
@@ -48,9 +50,13 @@ import AddTicker from './components/AddTicker.vue';
 import PaginationControls from './components/PaginationControls.vue';
 import TheGraph from './components/TheGraph.vue';
 import TickersList from '@/components/TickersList.vue';
+import TopCoinList from './components/TopCoinList.vue';
+
+const PER_PAGE = 6;
 
 export default {
   components: {
+    TopCoinList,
     AddTicker,
     TheGraph,
     PaginationControls,
@@ -78,11 +84,11 @@ export default {
     },
 
     startIndex() {
-      return 6 * (this.page - 1);
+      return PER_PAGE * (this.page - 1);
     },
 
     endIndex() {
-      return 6 * this.page;
+      return PER_PAGE * this.page;
     },
 
     hasNextPage() {
@@ -164,10 +170,23 @@ export default {
       }
       this.tickers = [...this.tickers, ticker];
       subscribeToTicker(ticker.name, (price) => {
-        console.log('update ticker');
         this.updateTicker(ticker.name, price);
       });
       this.ticker = '';
+    },
+
+    resizeGraph() {
+      if (this.graph.length > this.maxGraphElements) {
+        this.graph = this.graph.slice(
+          this.graph.length - this.maxGraphElements,
+          this.graph.length
+        );
+      }
+    },
+
+    updateMaxElements(maxElements) {
+      this.maxGraphElements = maxElements;
+      this.resizeGraph();
     },
 
     updateTicker(tickerName, price) {

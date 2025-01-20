@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import CloseIcon from '@/components/SVG/CloseIcon.vue';
+import CloseIcon from './SVG/CloseIcon.vue';
 
 export default {
   name: 'TheGraph',
@@ -38,57 +38,60 @@ export default {
     selectedTicker: Object,
     graph: Array,
   },
-  emits: ['removeGraph'],
+
+  emits: {
+    click: null,
+    removeGraph: null,
+    updateMaxElements: null,
+  },
+
   data() {
     return {
       maxGraphElements: 1,
       graphWidth: 0,
-      localGraph: [],
     };
   },
+
   computed: {
     normalizedGraph() {
-      const maxVal = Math.max(...this.localGraph);
-      let minVal = Math.min(...this.localGraph);
+      const maxVal = Math.max(...this.graph);
+      let minVal = Math.min(...this.graph);
       if (maxVal === minVal) {
         minVal = 0;
       }
-      return this.localGraph.map(
-        (g) => 5 + ((g - minVal) * 95) / (maxVal - minVal)
-      );
+      return this.graph.map((g) => 5 + ((g - minVal) * 95) / (maxVal - minVal));
     },
   },
+
   watch: {
-    graph: {
-      immediate: true,
-      handler(newGraph) {
-        this.localGraph = this.resizeGraph(newGraph);
-      },
+    maxGraphElements() {
+      this.$emit('updateMaxElements', this.maxGraphElements);
     },
+
+    graph() {
+      this.calculateMaxGraphElements();
+    },
+
     graphWidth() {
       this.calculateMaxGraphElements();
     },
   },
+
   mounted() {
     window.addEventListener('resize', this.calculateMaxGraphElements);
-    this.calculateMaxGraphElements();
   },
+
   beforeUnmount() {
     window.removeEventListener('resize', this.calculateMaxGraphElements);
   },
+
   methods: {
     calculateMaxGraphElements() {
       if (!this.$refs.graph) {
         return;
       }
       this.graphWidth = this.$refs.graph.clientWidth;
-      this.maxGraphElements = Math.floor(this.graphWidth / 38);
-    },
-    resizeGraph(graph) {
-      if (graph.length > this.maxGraphElements) {
-        return graph.slice(graph.length - this.maxGraphElements);
-      }
-      return graph;
+      this.maxGraphElements = parseFloat((this.graphWidth / 38).toFixed());
     },
   },
 };

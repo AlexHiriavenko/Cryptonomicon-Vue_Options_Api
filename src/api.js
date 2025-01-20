@@ -105,6 +105,5 @@ export const getCoinTopList = async (limit = 10) => {
     `https://min-api.cryptocompare.com/data/top/mktcapfull?limit=${limit}&tsym=USD`
   );
 
-  const data = await response.json();
-  console.log(data);
+  return await response.json().then((res) => res.Data);
 };
